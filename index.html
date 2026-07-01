@@ -205,7 +205,24 @@
       gap: 32px;
     }
 
-    .chart-block canvas { width: 100% !important; }
+    /* Bar chart: fixed CSS height so maintainAspectRatio:false works correctly */
+    #barChart {
+      display: block;
+      width: 100% !important;
+      height: clamp(160px, 22vh, 240px) !important;
+    }
+
+    /* Lollipop: scrollable wrapper + computed min-width set by JS */
+    .chart-block--scrollable {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    #lolliWrap { /* width set dynamically by JS */ }
+    #lollipopChart {
+      display: block;
+      width: 100% !important;
+      height: clamp(200px, 28vh, 280px) !important;
+    }
 
     /* ── TABLE ── */
     .table-header {
@@ -375,10 +392,12 @@
 
     <div class="chart-pair">
       <div class="chart-block">
-        <canvas id="barChart" height="200"></canvas>
+        <canvas id="barChart"></canvas>
       </div>
-      <div class="chart-block">
-        <canvas id="lollipopChart" height="240"></canvas>
+      <div class="chart-block chart-block--scrollable" id="lolliScrollOuter">
+        <div id="lolliWrap">
+          <canvas id="lollipopChart"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -604,7 +623,7 @@ function initCharts() {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         title: {
@@ -618,7 +637,6 @@ function initCharts() {
       scales: {
         y: {
           beginAtZero: true,
-          title: { display: true, text: 'Number of times each digit appears in selected range', color: '#6b7280', font: { size: 11 } },
           ticks: { precision: 0, color: '#6b7280' },
           grid: { color: '#f3f4f6' }
         },
@@ -645,7 +663,7 @@ function initCharts() {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       animation: false,
       plugins: {
         legend: { display: false },
@@ -679,6 +697,15 @@ function initCharts() {
     },
     plugins: [lolliPlugin]
   });
+  setLolliWidth(slice.length);
+}
+
+function setLolliWidth(numDays) {
+  const outer = document.getElementById('lolliScrollOuter');
+  const wrap  = document.getElementById('lolliWrap');
+  if (!outer || !wrap) return;
+  const minW = Math.max(outer.clientWidth || 300, numDays * 13);
+  wrap.style.width = minW + 'px';
 }
 
 function updateCharts() {
@@ -693,7 +720,12 @@ function updateCharts() {
   lolliChart.data.datasets[0].borderColor = slice.map(d => COLORS[d]);
   lolliChart.options.plugins.title.text = `${rEnd - rStart + 1} days of digits`;
   lolliChart.update('none');
+  setLolliWidth(slice.length);
 }
+
+window.addEventListener('resize', () => {
+  if (typeof rEnd !== 'undefined') setLolliWidth(rEnd - rStart + 1);
+});
 
 // ─── COPY CHARTS ─────────────────────────────────────────────────────────────
 async function copyCharts() {
