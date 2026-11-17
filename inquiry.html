@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Piary Inquiry</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f8fb;
+      --surface: #ffffff;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --grid: #f3f4f6;
+      --line: #5090cc;
+      --slip: #e55d22;
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
+      --radius: 14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: #5090cc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 0;
+    }
+    header .wrap { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .site-title {
+      font-size: 2rem; font-weight: 900; letter-spacing: -0.04em;
+      background: linear-gradient(120deg, #4bbfc8 0%, #a890d0 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    main { padding: 32px 0 60px; }
+    .stack { display: flex; flex-direction: column; gap: 24px; }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 32px;
+    }
+    @media (max-width: 600px) { .card { padding: 20px 18px; } }
+
+    .eyebrow {
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted);
+    }
+    h1 { font-size: 1.9rem; line-height: 1.2; letter-spacing: -0.02em; margin: 6px 0 10px; }
+    h2 {
+      font-size: 1rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted); margin-bottom: 14px;
+    }
+    p { color: #374151; }
+    p + p { margin-top: 10px; }
+    .lede { font-size: 1.05rem; }
+    ul.findings { padding-left: 20px; color: #374151; }
+    ul.findings li + li { margin-top: 6px; }
+    blockquote {
+      border-left: 4px solid var(--slip); padding: 4px 0 4px 14px;
+      color: #374151; font-style: italic; margin: 12px 0;
+    }
+
+    /* stat tiles */
+    .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+    @media (max-width: 600px) { .tiles { grid-template-columns: 1fr; } }
+    .tile { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .tile .num { font-size: 2.2rem; font-weight: 900; line-height: 1.1; }
+    .tile .lbl { font-size: 0.85rem; color: var(--muted); }
+
+    /* timeline chart */
+    .chart { position: relative; width: 100%; }
+    .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .chart text { font-size: 12px; fill: var(--muted); }
+    .chart .lbl-strong { fill: var(--text); font-weight: 600; }
+    .tooltip {
+      position: absolute; pointer-events: none; opacity: 0;
+      background: var(--text); color: #fff; font-size: 0.8rem; line-height: 1.4;
+      padding: 8px 10px; border-radius: 8px; max-width: 240px;
+      transform: translate(-50%, calc(-100% - 12px)); transition: opacity 0.12s;
+    }
+    .tooltip.on { opacity: 1; }
+    .caption { font-size: 0.85rem; color: var(--muted); margin-top: 10px; }
+
+    /* digit strips */
+    .incident + .incident { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--grid); }
+    .incident h3 { font-size: 1rem; margin-bottom: 4px; }
+    .incident .when { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
+    .strip-wrap { overflow-x: auto; padding-bottom: 4px; }
+    .strip { display: grid; grid-template-columns: 92px repeat(var(--n), 38px); gap: 6px 4px; align-items: center; }
+    .strip .rowlbl { font-size: 0.8rem; color: var(--muted); }
+    .cell {
+      height: 40px; border-radius: 6px; background: #f9fafb; border: 1px solid var(--border);
+      border-top: 4px solid var(--c, var(--border));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.05rem; color: var(--text);
+    }
+    .cell.gap { background: transparent; border: 1px dashed var(--border); border-top: 1px dashed var(--border); }
+    .cell.extra { outline: 2px solid var(--slip); outline-offset: 1px; }
+    .date { font-size: 0.68rem; color: var(--muted); text-align: center; line-height: 1.1; }
+    .incident p { margin-top: 12px; font-size: 0.95rem; }
+
+    details { margin-top: 14px; font-size: 0.9rem; }
+    summary { cursor: pointer; color: var(--muted); }
+    table { border-collapse: collapse; margin-top: 8px; width: 100%; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); }
+    th { color: var(--muted); font-weight: 600; }
+
+    footer { font-size: 0.8rem; color: var(--muted); padding: 0 0 40px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a href="index.html" class="site-title" style="text-decoration:none;">Piary</a>
+    <a href="index.html" style="margin-left:auto;font-size:0.85rem;font-weight:600;">← Back to Piary</a>
+  </div>
+</header>
+
+<main>
+<div class="wrap stack">
+
+  <!-- TITLE & SUMMARY -->
+  <section class="card">
+    <div class="eyebrow">Inquiry report · 17 November 2026</div>
+    <h1>The Case of the Five Missing Days</h1>
+    <p class="lede">
+      Piary began on <strong>14 November 2020</strong>. Six years on, the group writes each entry
+      five digits behind pi. This inquiry establishes when the days went missing, and why.
+    </p>
+
+    <div class="tiles">
+      <div class="tile"><div class="num">5</div><div class="lbl">days lost</div></div>
+      <div class="tile"><div class="num">4</div><div class="lbl">separate incidents, all in 2021</div></div>
+      <div class="tile"><div class="num" id="today-days" style="font-size:1.7rem;padding-top:5px;">—</div><div class="lbl" id="today-lbl">today: group day vs true day</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Findings</h2>
+    <ul class="findings">
+      <li>No days were skipped. Every loss came from <strong>writing to the same digit twice</strong>.</li>
+      <li>The losses happened in four incidents between January and November 2021. The gap has held at exactly five days since.</li>
+      <li>In each incident, nobody announced the day's digit, so the group followed whoever posted first.</li>
+      <li>The original Tableau viz kept the true count throughout. It was checked once, on 19 November 2021, and its answer was not acted on.</li>
+    </ul>
+  </section>
+
+  <!-- EXHIBIT A -->
+  <section class="card">
+    <h2>Exhibit A · Days behind pi</h2>
+    <div class="chart" id="lag-chart">
+      <div class="tooltip" id="tip"></div>
+    </div>
+    <p class="caption">Each step is one incident. Hover or tap a marker for details.</p>
+    <details>
+      <summary>Show as a table</summary>
+      <table id="lag-table">
+        <thead><tr><th>Date</th><th>Incident</th><th>Days behind after</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </details>
+  </section>
+
+  <!-- EXHIBIT B -->
+  <section class="card">
+    <h2>Exhibit B · The four incidents</h2>
+    <p style="margin-bottom:20px;">
+      The top row is what the group wrote, read from the length of each day's entries.
+      The bottom row is pi in the same order. <span style="outline:2px solid var(--slip);outline-offset:1px;border-radius:3px;padding:0 4px;">Outlined</span>
+      tiles are the repeats, and dashed gaps show where pi had nothing to match.
+    </p>
+    <div id="incidents"></div>
+  </section>
+
+  <!-- FACTORS & RECOMMENDATION -->
+  <section class="card">
+    <h2>Contributing factors</h2>
+    <ul class="findings">
+      <li><strong>No digit announced.</strong> Andy normally posts each day's digit with a song clue. In every incident that announcement was missing, late, or confused.</li>
+      <li><strong>Late-night posting.</strong> Most entries arrive near midnight or the next morning, and the first entry of the night set the digit for everyone.</li>
+      <li><strong>Pi's own patterns.</strong> Runs like 1 4 1, 1 1 and 3 3 make a repeated digit look correct.</li>
+      <li><strong>Two counts, never reconciled.</strong> By November 2021 the group's count and the Tableau viz disagreed by four days, and nobody resolved it.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Recommendation</h2>
+    <p>
+      The group should choose one count and keep this site as the single reference. It can stay five digits
+      behind and keep the history unbroken, or jump forward five digits to rejoin the true sequence.
+      Either way, the daily digit should come from the site rather than from memory.
+    </p>
+    <p style="font-size:0.85rem;color:var(--muted);margin-top:14px;">
+      Method: the digit for each day was taken from the number of lines in that day's entries
+      (single-word entries count as 1; days without text count as 0). That sequence was then matched against pi.
+    </p>
+  </section>
+
+</div>
+</main>
+
+<footer><div class="wrap">Piary inquiry · <a href="index.html">Back to Piary</a></div></footer>
+
+<script>
+const COLORS = ['#4bbfc8','#43b494','#56a845','#92a830','#f5a020','#e85020','#e81848','#f0709c','#a890d0','#5090cc'];
+
+// ── today: true day vs group day ─────────────────────────────────────────────
+(function () {
+  const now = new Date();
+  const t = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const trueDay = Math.floor((t - Date.UTC(2020, 10, 14)) / 86400000) + 1;
+  const groupDay = trueDay - 5;
+  document.getElementById('today-days').textContent = groupDay.toLocaleString() + ' / ' + trueDay.toLocaleString();
+  document.getElementById('today-lbl').textContent = 'today: group day / true day';
+})();
+
+// ── Exhibit A: step chart of lag ─────────────────────────────────────────────
+const SLIPS = [
+  { date: '2021-01-10', lag: 1, label: '10 Jan 2021', text: 'A 7 written two days running' },
+  { date: '2021-09-10', lag: 3, label: '9–10 Sep 2021', text: 'The pair 4, 1 written twice' },
+  { date: '2021-11-01', lag: 4, label: '31 Oct – 1 Nov 2021', text: 'A 4 written two days running (clocks went back)' },
+  { date: '2021-11-19', lag: 5, label: '19 Nov 2021', text: 'A third day of 3s, the week of the "anniversary"' },
+];
+
+(function () {
+  const el = document.getElementById('lag-chart');
+  const tip = document.getElementById('tip');
+  const d0 = Date.UTC(2020, 10, 14);
+  const now = new Date();
+  const d1 = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const ts = s => { const [a, b, c] = s.split('-').map(Number); return Date.UTC(a, b - 1, c); };
+
+  function draw() {
+  el.querySelector('svg')?.remove();
+  const W = Math.max(300, el.clientWidth), H = W < 500 ? 220 : 260, m = { l: 26, r: 8, t: 22, b: 30 };
+  const x = d => m.l + (d - d0) / (d1 - d0) * (W - m.l - m.r);
+  const y = v => m.t + (1 - v / 5) * (H - m.t - m.b);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Step chart: days behind pi, rising from 0 to 5 during 2021 and flat since">`;
+  for (let v = 0; v <= 5; v++) {
+    svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${v === 0 ? '#d1d5db' : '#f3f4f6'}" stroke-width="1"/>`;
+    svg += `<text x="${m.l - 10}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  }
+  for (let yr = 2021; yr <= 2026; yr++) {
+    const xx = x(Date.UTC(yr, 0, 1));
+    svg += `<line x1="${xx}" x2="${xx}" y1="${H - m.b}" y2="${H - m.b + 5}" stroke="#d1d5db"/>`;
+    svg += `<text x="${xx}" y="${H - m.b + 20}" text-anchor="middle">${W < 500 ? "'" + String(yr).slice(2) : yr}</text>`;
+  }
+  // step path
+  let p = `M${x(d0)},${y(0)}`, lag = 0;
+  SLIPS.forEach(s => { const xx = x(ts(s.date)); p += ` H${xx} V${y(s.lag)}`; lag = s.lag; });
+  p += ` H${x(d1)}`;
+  svg += `<path d="${p}" fill="none" stroke="var(--line)" stroke-width="2" stroke-linejoin="round"/>`;
+  // end label
+  svg += `<text class="lbl-strong" x="${x(d1)}" y="${y(5) - 10}" text-anchor="end">5 days behind since Nov 2021</text>`;
+  // markers + generous hit targets
+  SLIPS.forEach((s, i) => {
+    const xx = x(ts(s.date)), yy = y(s.lag);
+    svg += `<circle cx="${xx}" cy="${yy}" r="5" fill="var(--slip)" stroke="#fff" stroke-width="2"/>`;
+    svg += `<circle class="hit" data-i="${i}" cx="${xx}" cy="${yy}" r="16" fill="transparent" style="cursor:pointer"/>`;
+  });
+  svg += `</svg>`;
+  el.insertAdjacentHTML('beforeend', svg);
+  el.querySelectorAll('.hit').forEach(c => {
+    c.addEventListener('mouseenter', () => show(c));
+    c.addEventListener('click', () => show(c));
+    c.addEventListener('mouseleave', () => tip.classList.remove('on'));
+  });
+  }
+
+  const show = (c) => {
+    const s = SLIPS[+c.dataset.i];
+    const r = el.getBoundingClientRect(), b = c.getBoundingClientRect();
+    tip.innerHTML = `<strong>${s.label}</strong><br>${s.text}<br>Now ${s.lag} day${s.lag > 1 ? 's' : ''} behind`;
+    tip.style.left = (b.left + b.width / 2 - r.left) + 'px';
+    tip.style.top = (b.top + b.height / 2 - r.top) + 'px';
+    tip.classList.add('on');
+  };
+  draw();
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 150); });
+
+  const tb = document.querySelector('#lag-table tbody');
+  SLIPS.forEach(s => tb.insertAdjacentHTML('beforeend', `<tr><td>${s.label}</td><td>${s.text}</td><td>${s.lag}</td></tr>`));
+})();
+
+// ── Exhibit B: digit strips ──────────────────────────────────────────────────
+// group: digits written; pi: aligned pi digits (null = gap); extra: indexes of repeats
+const INCIDENTS = [
+  {
+    title: 'Incident 1 · January 2021',
+    when: '1 day lost · 0 → 1 behind',
+    dates: ['8 Jan', '9 Jan', '10 Jan', '11 Jan', '12 Jan'],
+    group: [9, 7, 7, 4, 9],
+    pi:    [9, 7, null, 4, 9],
+    extra: [2],
+    note: 'The 7 for day 57 was written on 9 and 10 January. On the 10th Andy posted <em>“Here’s my 7 from yesterday”</em>, and the group wrote 7s again. On the 11th the next digit was posted late, as a song clue.'
+  },
+  {
+    title: 'Incident 2 · September 2021',
+    when: '2 days lost · 1 → 3 behind',
+    dates: ['5 Sep', '6 Sep', '7 Sep', '8 Sep', '9 Sep', '10 Sep', '11 Sep', '12 Sep'],
+    group: [9, 1, 4, 1, 4, 1, 2, 7],
+    pi:    [9, 1, 4, 1, null, null, 2, 7],
+    extra: [4, 5],
+    note: 'The week after Andy’s 48 km charity walk, no digits were announced. Pi had just run 1, 4, 1. On the 9th nobody posted until a four-line entry appeared just before midnight, and everyone followed it. The 10th was a one-word day again.'
+  },
+  {
+    title: 'Incident 3 · October–November 2021',
+    when: '1 day lost · 3 → 4 behind',
+    dates: ['29 Oct', '30 Oct', '31 Oct', '1 Nov', '2 Nov', '3 Nov'],
+    group: [3, 6, 4, 4, 3, 6],
+    pi:    [3, 6, 4, null, 3, 6],
+    extra: [3],
+    note: 'The 4 for day 349 was written on 31 October and again on 1 November. That was the weekend the UK clocks went back.'
+  },
+  {
+    title: 'Incident 4 · November 2021',
+    when: '1 day lost · 4 → 5 behind',
+    dates: ['15 Nov', '16 Nov', '17 Nov', '18 Nov', '19 Nov', '20 Nov', '21 Nov'],
+    group: [1, 1, 3, 3, 3, 0, 5],
+    pi:    [1, 1, 3, 3, null, 0, 5],
+    extra: [4],
+    note: 'Andy posted <em>“Sunday’s zero is day 362”</em> on 14 November, when it was really day 366. On the 17th he wrote <em>“Piary / is one year / old today”</em>, three days after the real anniversary. On the 19th a member checked the Tableau viz, which said 18th = 0 and 19th = 5. That was the true count, but it didn’t match the group’s own count either, and the group wrote a third day of 3s.'
+  },
+];
+
+(function () {
+  const host = document.getElementById('incidents');
+  const cell = (d, cls = '') => d === null
+    ? `<div class="cell gap" aria-label="no matching digit"></div>`
+    : `<div class="cell ${cls}" style="--c:${COLORS[d]}">${d}</div>`;
+  INCIDENTS.forEach(inc => {
+    const n = inc.group.length;
+    let h = `<div class="incident"><h3>${inc.title}</h3><div class="when">${inc.when}</div>`;
+    h += `<div class="strip-wrap"><div class="strip" style="--n:${n}">`;
+    h += `<div></div>` + inc.dates.map(d => `<div class="date">${d}</div>`).join('');
+    h += `<div class="rowlbl">Group wrote</div>` + inc.group.map((d, i) => cell(d, inc.extra.includes(i) ? 'extra' : '')).join('');
+    h += `<div class="rowlbl">Pi</div>` + inc.pi.map(d => cell(d)).join('');
+    h += `</div></div><p>${inc.note}</p></div>`;
+    host.insertAdjacentHTML('beforeend', h);
+  });
+})();
+</script>
+</body>
+</html>
