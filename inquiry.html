@@ -113,6 +113,38 @@
     .date { font-size: 0.68rem; color: var(--muted); text-align: center; line-height: 1.1; }
     .incident p { margin-top: 12px; font-size: 0.95rem; }
 
+    /* chat excerpts */
+    .chat {
+      margin-top: 16px; background: #f4f6f9; border-radius: 12px;
+      padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .chat-head { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .msg { display: flex; gap: 10px; align-items: flex-start; max-width: 520px; }
+    .msg.me { align-self: flex-end; flex-direction: row-reverse; }
+    .avatar {
+      flex: 0 0 30px; height: 30px; border-radius: 50%; background: #e2e5ea; color: #4b5563;
+      font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .bubble {
+      background: var(--surface); border-radius: 4px 12px 12px 12px; padding: 8px 12px 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .msg.me .bubble { background: #eaf2fb; border-radius: 12px 4px 12px 12px; }
+    .bubble .who { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+    .bubble .when { font-size: 0.72rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+    .bubble .body { font-size: 0.95rem; color: #1f2937; white-space: pre-line; margin-top: 2px; }
+    .bubble .body.poem { font-family: Georgia, 'Times New Roman', serif; font-style: italic; line-height: 1.45; }
+    .bubble .tag {
+      display: inline-block; margin-top: 6px; font-size: 0.72rem; color: var(--slip);
+      font-weight: 600;
+    }
+    .words { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+    .chip {
+      background: var(--surface); border-radius: 999px; padding: 3px 10px; font-size: 0.85rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .chip b { font-weight: 600; color: var(--muted); font-size: 0.72rem; margin-right: 4px; }
+
     details { margin-top: 14px; font-size: 0.9rem; }
     summary { cursor: pointer; color: var(--muted); }
     table { border-collapse: collapse; margin-top: 8px; width: 100%; font-size: 0.85rem; }
@@ -153,7 +185,7 @@
   <section class="card">
     <h2>Findings</h2>
     <ul class="findings">
-      <li>No days were skipped. Every loss came from <strong>writing to the same digit twice</strong>.</li>
+      <li>No digit of pi was ever skipped. Every loss was <strong>an extra day</strong>: three times a digit was written twice, and once a wrong digit was slipped in.</li>
       <li>The losses happened in four incidents between January and November 2021. The gap has held at exactly five days since.</li>
       <li>In each incident, nobody announced the day's digit, so the group followed whoever posted first.</li>
       <li>The original Tableau viz kept the true count throughout. It was checked once, on 19 November 2021, and its answer was not acted on.</li>
@@ -182,7 +214,7 @@
     <p style="margin-bottom:20px;">
       The top row is what the group wrote, read from the length of each day's entries.
       The bottom row is pi in the same order. <span style="outline:2px solid var(--slip);outline-offset:1px;border-radius:3px;padding:0 4px;">Outlined</span>
-      tiles are the repeats, and dashed gaps show where pi had nothing to match.
+      tiles are the extra days, and dashed gaps show where pi had nothing to match.
     </p>
     <div id="incidents"></div>
   </section>
@@ -231,7 +263,7 @@ const COLORS = ['#4bbfc8','#43b494','#56a845','#92a830','#f5a020','#e85020','#e8
 
 // ── Exhibit A: step chart of lag ─────────────────────────────────────────────
 const SLIPS = [
-  { date: '2021-01-10', lag: 1, label: '10 Jan 2021', text: 'A 7 written two days running' },
+  { date: '2021-01-10', lag: 1, label: '10 Jan 2021', text: 'A 1 slipped in where pi had a 4' },
   { date: '2021-09-10', lag: 3, label: '9–10 Sep 2021', text: 'The pair 4, 1 written twice' },
   { date: '2021-11-01', lag: 4, label: '31 Oct – 1 Nov 2021', text: 'A 4 written two days running (clocks went back)' },
   { date: '2021-11-19', lag: 5, label: '19 Nov 2021', text: 'A third day of 3s, the week of the "anniversary"' },
@@ -306,10 +338,18 @@ const INCIDENTS = [
     title: 'Incident 1 · January 2021',
     when: '1 day lost · 0 → 1 behind',
     dates: ['8 Jan', '9 Jan', '10 Jan', '11 Jan', '12 Jan'],
-    group: [9, 7, 7, 4, 9],
+    group: [9, 7, 1, 4, 9],
     pi:    [9, 7, null, 4, 9],
     extra: [2],
-    note: 'The 7 for day 57 was written on 9 and 10 January. On the 10th Andy posted <em>“Here’s my 7 from yesterday”</em>, and the group wrote 7s again. On the 11th the next digit was posted late, as a song clue.'
+    note: 'On the 10th the day’s song clue was read as a 1, and everyone posted one-word entries. Pi’s next digit was a 4, which arrived a day late on the 11th, again as a song clue.',
+    chat: [
+      { who: 'Andy', when: '10 Jan, 11:06', lines: ['Here’s my 7 from yesterday:'] },
+      { who: 'Andy', when: '10 Jan, 11:06', lines: ['Are we in the fog or not?', 'The world a palette of greys', 'With short moments of bright sun.', '…'] },
+      { words: true, when: '10 Jan · the “1” day', items: [['Lexie', 'Work 😏'], ['Andrea', 'Jobs'], ['Kevin', 'Roll'], ['Mark', 'Paint!'], ['Liz', 'Melt'], ['Andy', 'Trains']] },
+      { who: 'Lexie', when: '11 Jan, 14:51', lines: ['What’s the digit of the day @Andy?'] },
+      { who: 'Andy', when: '11 Jan, 15:08', lines: ['D’oh. Sorry I’m late with the digits. Here’s a track that provides the answer:'] },
+      { who: 'Andy', when: '11 Jan, 15:09', lines: ['Four Sticks by Led Zeppelin'] },
+    ]
   },
   {
     title: 'Incident 2 · September 2021',
@@ -318,7 +358,15 @@ const INCIDENTS = [
     group: [9, 1, 4, 1, 4, 1, 2, 7],
     pi:    [9, 1, 4, 1, null, null, 2, 7],
     extra: [4, 5],
-    note: 'The week after Andy’s 48 km charity walk, no digits were announced. Pi had just run 1, 4, 1. On the 9th nobody posted until a four-line entry appeared just before midnight, and everyone followed it. The 10th was a one-word day again.'
+    note: 'The week after Andy’s 48 km charity walk, no digits were announced. Pi had just run 1, 4, 1. On the 9th nobody posted until a four-line entry appeared just before midnight, and everyone followed it. The 10th was a one-word day again.',
+    chat: [
+      { who: 'Lexie', when: '31 Aug, 21:04', lines: ['What are we on today @Andy?'] },
+      { who: 'Andy', when: '31 Aug, 21:06', lines: ['Oops. Complete dereliction of duty. One moment.'] },
+      { who: 'Andrea', when: '7 Sep, 23:56', note: 'the genuine 4', lines: ['Nearly midnight', 'Piary calls', 'Glad it’s a four', 'As I’ll run out …'] },
+      { who: 'Liz', when: '9 Sep, 23:50', note: 'the first post of the day, and everyone followed', lines: ['Depressed dreamers', 'And Maltesers', 'Tied for first place.', 'Long live King Dom!'] },
+      { who: 'Claire', when: '9 Sep, 23:52', lines: ['Windmills, treasure,', 'Cacti, golden maps.', 'The legacies', 'To be revealed.'] },
+      { words: true, when: '10 Sep · one word again', items: [['Andy', 'Tired.'], ['Lexie', 'Flicks'], ['Andrea', 'Lunch'], ['Claire', 'Glow'], ['Liz', 'Friends']] },
+    ]
   },
   {
     title: 'Incident 3 · October–November 2021',
@@ -327,7 +375,13 @@ const INCIDENTS = [
     group: [3, 6, 4, 4, 3, 6],
     pi:    [3, 6, 4, null, 3, 6],
     extra: [3],
-    note: 'The 4 for day 349 was written on 31 October and again on 1 November. That was the weekend the UK clocks went back.'
+    note: 'The 4 for day 349 was written on 31 October and again on 1 November. That was the weekend the UK clocks went back.',
+    chat: [
+      { who: 'Liz', when: '31 Oct, 08:41', lines: ['Sometimes piary is', 'beyond me before bed,', 'especially these last', 'few weeks: I’m always tired, …'] },
+      { who: 'Claire', when: '31 Oct, 19:52', note: 'Halloween: the 4', lines: ['Scaring small kids', 'With witch cackles.', 'Compensated', 'With small sweet treats.'] },
+      { who: 'Andrea', when: '1 Nov, 23:13', note: 'Monday: a 4 again', lines: ['Just another', 'manic Monday.', 'I wish it were', 'Sunday (woah woah)'] },
+      { who: 'Andy', when: '2 Nov, 22:35', note: 'it was really day 354', lines: ['Three hundred', 'and fifty', 'days are done.'] },
+    ]
   },
   {
     title: 'Incident 4 · November 2021',
@@ -336,7 +390,16 @@ const INCIDENTS = [
     group: [1, 1, 3, 3, 3, 0, 5],
     pi:    [1, 1, 3, 3, null, 0, 5],
     extra: [4],
-    note: 'Andy posted <em>“Sunday’s zero is day 362”</em> on 14 November, when it was really day 366. On the 17th he wrote <em>“Piary / is one year / old today”</em>, three days after the real anniversary. On the 19th a member checked the Tableau viz, which said 18th = 0 and 19th = 5. That was the true count, but it didn’t match the group’s own count either, and the group wrote a third day of 3s.'
+    note: 'Andy posted <em>“Sunday’s zero is day 362”</em> on 14 November, when it was really day 366. On the 17th he wrote <em>“Piary / is one year / old today”</em>, three days after the real anniversary. On the 19th a member checked the Tableau viz, which said 18th = 0 and 19th = 5. That was the true count, but it didn’t match the group’s own count either, and the group wrote a third day of 3s.',
+    chat: [
+      { who: 'Liz', when: '6 Nov, 23:34', lines: ['We are close to piary’s birthday.', 'This year I’ve counted on my fingers', 'More than in any other year. …'] },
+      { who: 'Andy', when: '14 Nov, 22:20', lines: ['Sunday’s zero is day 362. In the next few days, it’s 1, 1, 3. The 3 is the 365th day!'] },
+      { who: 'Andy', when: '17 Nov, 14:29', note: 'the real anniversary was the 14th', lines: ['Piary', 'is one year', 'old today'] },
+      { who: 'Lexie', when: '18 Nov, 21:14', lines: ['What’s today’s number Mr C?'] },
+      { who: 'Liz', when: '18 Nov, 21:15', lines: ['It’s a 0'] },
+      { who: 'Liz', when: '19 Nov, 13:28', note: 'the true count', lines: ['Your clever Tableau thing says the 18th (yesterday) is a 0… and today, 19th, is a 5.'] },
+      { who: 'Liz', when: '19 Nov, 23:36', note: 'the third 3', lines: ['Non stop talk', 'With dear friends', 'My soul sings'] },
+    ]
   },
 ];
 
@@ -352,7 +415,25 @@ const INCIDENTS = [
     h += `<div></div>` + inc.dates.map(d => `<div class="date">${d}</div>`).join('');
     h += `<div class="rowlbl">Group wrote</div>` + inc.group.map((d, i) => cell(d, inc.extra.includes(i) ? 'extra' : '')).join('');
     h += `<div class="rowlbl">Pi</div>` + inc.pi.map(d => cell(d)).join('');
-    h += `</div></div><p>${inc.note}</p></div>`;
+    h += `</div></div><p>${inc.note}</p>`;
+    if (inc.chat) {
+      h += `<div class="chat"><div class="chat-head">From the chat</div>`;
+      inc.chat.forEach(c => {
+        if (c.words) {
+          h += `<div><div class="chat-head" style="text-transform:none;letter-spacing:0;font-weight:600;">${c.when}</div>`
+             + `<div class="words">${c.items.map(([w, t]) => `<span class="chip"><b>${w}</b>${t}</span>`).join('')}</div></div>`;
+          return;
+        }
+        const poem = c.lines.length > 1;
+        h += `<div class="msg${c.who === 'Andy' ? ' me' : ''}"><div class="avatar" aria-hidden="true">${c.who[0]}</div>`
+           + `<div class="bubble"><div class="who">${c.who}<span class="when">${c.when}</span></div>`
+           + `<div class="body${poem ? ' poem' : ''}">${c.lines.join('\n')}</div>`
+           + (c.note ? `<div class="tag">↳ ${c.note}</div>` : '')
+           + `</div></div>`;
+      });
+      h += `</div>`;
+    }
+    h += `</div>`;
     host.insertAdjacentHTML('beforeend', h);
   });
 })();
