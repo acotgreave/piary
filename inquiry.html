@@ -118,6 +118,17 @@
       margin-top: 16px; background: #f4f6f9; border-radius: 12px;
       padding: 16px; display: flex; flex-direction: column; gap: 10px;
     }
+    .chat-toggle { margin-top: 14px; }
+    .chat-toggle > summary {
+      display: inline-flex; align-items: center; gap: 8px; cursor: pointer; list-style: none;
+      font-size: 0.85rem; font-weight: 600; color: var(--line);
+      padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: #f9fafb;
+    }
+    .chat-toggle > summary::-webkit-details-marker { display: none; }
+    .chat-toggle > summary::before { content: '▸'; transition: transform 0.15s; }
+    .chat-toggle[open] > summary::before { transform: rotate(90deg); }
+    .chat-toggle[open] > summary { margin-bottom: 2px; }
+    .chat-toggle .chat { margin-top: 10px; }
     .chat-head { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
     .msg { display: flex; gap: 10px; align-items: flex-start; max-width: 520px; }
     .msg.me { align-self: flex-end; flex-direction: row-reverse; }
@@ -417,7 +428,8 @@ const INCIDENTS = [
     h += `<div class="rowlbl">Pi</div>` + inc.pi.map(d => cell(d)).join('');
     h += `</div></div><p>${inc.note}</p>`;
     if (inc.chat) {
-      h += `<div class="chat"><div class="chat-head">From the chat</div>`;
+      h += `<details class="chat-toggle"><summary>Expand: from the chat</summary>`
+         + `<div class="chat">`;
       inc.chat.forEach(c => {
         if (c.words) {
           h += `<div><div class="chat-head" style="text-transform:none;letter-spacing:0;font-weight:600;">${c.when}</div>`
@@ -431,7 +443,7 @@ const INCIDENTS = [
            + (c.note ? `<div class="tag">↳ ${c.note}</div>` : '')
            + `</div></div>`;
       });
-      h += `</div>`;
+      h += `</div></details>`;
     }
     h += `</div>`;
     host.insertAdjacentHTML('beforeend', h);
